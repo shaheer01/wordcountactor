@@ -54,7 +54,7 @@ public class ActorWordCount {
                         list.forEach(word -> {
                             int choose = Math.abs(word.toLowerCase().hashCode() % actorProperties.getActorConcurrency());
                             log.info("Word: " + word + " Choose: " + choose);
-                            layer3Actor.get(choose).send(word);
+                            layer3Actor.get(choose).send(word.toLowerCase());
                         });
 
                     }, (actor, exception) -> log.error(String.valueOf(exception))
