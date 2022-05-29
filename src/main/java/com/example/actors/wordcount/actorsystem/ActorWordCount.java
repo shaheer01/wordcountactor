@@ -1,51 +1,58 @@
 package com.example.actors.wordcount.actorsystem;
 
 import com.example.actors.wordcount.actors.CustomActor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import com.example.actors.wordcount.utils.ActorProperties;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class CustomActorRunner {
+@Slf4j
+@Service
+public class ActorWordCount {
 
     private static List<CustomActor<String>> layer2Actor;
     private static List<CustomActor<String>> layer3Actor;
-    private static final Logger log = LoggerFactory.getLogger(CustomActorRunner.class);
-    private static final ConcurrentHashMap<String, Integer> finalOutput= new ConcurrentHashMap<String,Integer>();
+    private static final ConcurrentHashMap<String, Integer> finalOutput = new ConcurrentHashMap<String, Integer>();
+    @Autowired
+    ActorProperties actorProperties;
 
-    public static void main(String[] args) throws InterruptedException {
-
+    public void wordCount (String sentences){
         layer2Actor = new ArrayList<>(10);
         layer3Actor = new ArrayList<>(10);
         int c;
-        for(c=0; c<10; c++) {
+        for (c = 0; c < 10; c++) {
             CustomActor<String> layer3ActorN = ActorSystem.create((actor, message) -> {
                         log.info("Processing: " + message);
                         //:TODO: Optimization around this.
-                        if(finalOutput.containsKey(message)){
-                            finalOutput.put(message,finalOutput.get(message)+1);
-                        }else{
-                            finalOutput.put(message,1);
+                        if (finalOutput.containsKey(message)) {
+                            finalOutput.put(message, finalOutput.get(message) + 1);
+                        } else {
+                            finalOutput.put(message, 1);
                         }
 
                         finalOutput.forEach((key, value) -> log.info(key + " " + value));
-                        log.info(String.valueOf("Final wordcount" +finalOutput));
-                    },  (actor, exception) -> log.error(String.valueOf(exception))
+                        log.info(String.valueOf("Final wordcount" + finalOutput));
+                    }, (actor, exception) -> log.error(String.valueOf(exception))
             );
             layer3Actor.add(layer3ActorN);
         }
 
-        for(c=0; c<10; c++) {
+        for (c = 0; c < 10; c++) {
             CustomActor<String> layer2ActorN = ActorSystem.create((actor, message) -> {
                         List<String> list =
                                 Stream.of(message).map(k -> k.split("\\W+")).flatMap(Arrays::stream).collect(Collectors.toList());
                         log.info("Output layer2Actor:" + list);
 
                         list.forEach(word -> {
-                            int choose = Math.abs(word.hashCode() % 10);
+                            int choose = Math.abs(word.toLowerCase().hashCode() % actorProperties.getActorConcurrency());
                             log.info("Word: " + word + " Choose: " + choose);
                             layer3Actor.get(choose).send(word);
                         });
@@ -66,13 +73,14 @@ public class CustomActorRunner {
                     }
                 }, (actor, exception) -> log.error(String.valueOf(exception))
         );
-        log.info("Printing layer1Actor:"+ layer1Actor);
+        log.info("Printing layer1Actor:" + layer1Actor);
 
-        layer1Actor.send("Java is a language.Java is easy and i like Java.This is new line");
+        layer1Actor.send(sentences);
 
         ActorSystem.shutdown();
 
     }
+    public ConcurrentHashMap<String, Integer> getCount(){
+        return finalOutput;
+    }
 }
-
-

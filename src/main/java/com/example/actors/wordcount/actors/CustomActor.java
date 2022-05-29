@@ -1,7 +1,6 @@
 package com.example.actors.wordcount.actors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 import java.util.List;
@@ -11,9 +10,8 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 public class CustomActor<T> implements Runnable {
-
-    private static Logger log = LoggerFactory.getLogger(CustomActor.class);
 
     private final ConcurrentLinkedQueue<T> mailbox;
     private final BiConsumer<CustomActor<T>, T> actionHandler;

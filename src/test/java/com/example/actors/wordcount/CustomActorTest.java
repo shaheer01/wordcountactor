@@ -19,6 +19,7 @@ public class CustomActorTest
     private final BiConsumer<CustomActor<String>, String> behaviourHandler = mock(BiConsumer.class);
     private final BiConsumer<CustomActor<String>, Throwable> errorHandler = mock(BiConsumer.class);
     private CustomActor<String> actor;
+    private CustomActor<String> layer1Actor;
 
     @BeforeEach
     public void initEach()
@@ -29,7 +30,7 @@ public class CustomActorTest
     @Test
     public void testAcceptMessage()
     {
-        actor.send("Hello");
+        layer1Actor.send("Hello");
 
         attemptUntilPasses(() -> verify(behaviourHandler, times(1)).accept(actor, "Hello"));
     }
